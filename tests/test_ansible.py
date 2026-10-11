@@ -7,7 +7,7 @@ from helpers import ROOT, load_yaml, read
 
 ANSIBLE_DIR = ROOT / "ansible"
 ROLE_REL = "ansible/roles/hardening"
-TASK_FILES = ["packages.yml", "ssh.yml", "sysctl.yml", "firewall.yml", "updates.yml", "fail2ban.yml", "auditd.yml"]
+TASK_FILES = ["preflight.yml", "packages.yml", "ssh.yml", "sysctl.yml", "firewall.yml", "updates.yml", "fail2ban.yml", "auditd.yml"]
 MODULE_KEY_RE = re.compile(r"^(ansible\.builtin|ansible\.posix|community\.general)\.")
 TASK_KEYWORDS = {
     "name", "when", "loop", "notify", "become", "register", "tags", "vars", "import_tasks",
@@ -61,6 +61,15 @@ class PlaybookTest(unittest.TestCase):
         reqs = load_yaml("ansible/requirements.yml")
         names = {c["name"] for c in reqs["collections"]}
         self.assertEqual(names, {"ansible.posix", "community.general"})
+
+    def test_requirements_versions_have_upper_bounds(self):
+        # An open-ended '>=' lets galaxy resolve a release that needs a newer ansible-core
+        # than the role's min_ansible_version, so every range needs both bounds.
+        reqs = load_yaml("ansible/requirements.yml")
+        for collection in reqs["collections"]:
+            with self.subTest(collection=collection["name"]):
+                spec = str(collection["version"])
+                self.assertRegex(spec, r"^>=\d+\.\d+\.\d+,<\d+\.\d+\.\d+$")
 
     def test_ansible_cfg_settings(self):
         text = read("ansible/ansible.cfg")
@@ -127,7 +136,7 @@ class RoleDefaultsTest(unittest.TestCase):
 
 
 class RoleTasksStructureTest(unittest.TestCase):
-    def test_main_imports_all_seven_files(self):
+    def test_main_imports_all_task_files(self):
         tasks = task_list("main.yml")
         imported = []
         for task in tasks:
@@ -135,6 +144,35 @@ class RoleTasksStructureTest(unittest.TestCase):
                 if key in task:
                     imported.append(task[key])
         self.assertEqual(sorted(imported), sorted(TASK_FILES))
+
+    def test_preflight_is_first_import_and_runs_before_any_change(self):
+        # Static imports run in file order, so the first imported file is the first task
+        # executed. Preflight must be that file, or sshd could move before the guard runs.
+        tasks = task_list("main.yml")
+        first = tasks[0]
+        imported = first.get("import_tasks", first.get("ansible.builtin.import_tasks"))
+        self.assertEqual(imported, "preflight.yml")
+
+    def test_first_executed_task_is_the_ssh_port_assert(self):
+        first_task = task_list("preflight.yml")[0]
+        self.assertIn("ansible.builtin.assert", first_task)
+        self.assertEqual(first_task["name"], "Refuse to run if the SSH port would be blocked by the firewall")
+        self.assertIn("hardening_allow_tcp_ports", str(first_task["ansible.builtin.assert"]["that"]))
+
+    def test_lockout_and_noble_asserts_only_in_preflight(self):
+        # The SSH port guard and the noble guard must not be repeated after the changes they protect.
+        guard_markers = ("hardening_ssh_port", "distribution_release", "hardening_allow_tcp_ports")
+        for name in TASK_FILES:
+            if name == "preflight.yml":
+                continue
+            for task in task_list(name):
+                if "ansible.builtin.assert" not in task:
+                    continue
+                with self.subTest(file=name, task=task.get("name")):
+                    that = str(task["ansible.builtin.assert"].get("that", ""))
+                    self.assertFalse(any(marker in that for marker in guard_markers), that)
+        preflight_asserts = [t for t in task_list("preflight.yml") if "ansible.builtin.assert" in t]
+        self.assertEqual(len(preflight_asserts), 2)
 
     def test_each_imported_task_file_exists(self):
         for name in TASK_FILES:
@@ -238,7 +276,7 @@ class RoleTasksStructureTest(unittest.TestCase):
                 self.assertIs(passes(disable_root_login, stdout_lines), expected)
 
     def test_ssh_refuses_nonstandard_port_on_noble_by_default(self):
-        text = read(f"{ROLE_REL}/tasks/ssh.yml")
+        text = read(f"{ROLE_REL}/tasks/preflight.yml")
         self.assertIn("distribution_release'] != 'noble'", text)
         self.assertIn("hardening_allow_nonstandard_ssh_port_on_noble", text)
         defaults = load_yaml(f"{ROLE_REL}/defaults/main.yml")

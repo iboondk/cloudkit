@@ -1,0 +1,10 @@
+SKIP: terraform not installed (terraform checks not run)
+== ansible-galaxy collection install -r ansible/requirements.yml
+Starting galaxy collection install process
+Nothing to do. All requested collections are already installed. If you want to reinstall them, consider using `--force`.
+== ansible-playbook --syntax-check (ansible/site.yml)
+
+playbook: site.yml
+SKIP: tflint not installed
+SKIP: shellcheck not installed
+validate exit code: 0

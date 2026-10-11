@@ -1,10 +1,4 @@
 ---
-- name: Refuse to run if the SSH port would be blocked by the firewall
-  ansible.builtin.assert:
-    that:
-      - (hardening_ssh_port | int) in (hardening_allow_tcp_ports | map('int') | list)
-    fail_msg: "hardening_ssh_port ({{ hardening_ssh_port }}) must be listed in hardening_allow_tcp_ports or the host will be locked out."
-
 - name: Install ufw (Debian family)
   ansible.builtin.apt:
     name: ufw

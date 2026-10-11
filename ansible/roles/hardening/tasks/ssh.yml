@@ -1,16 +1,4 @@
 ---
-# Ubuntu 24.04 (noble) uses socket activation: the listening port comes from
-# ssh.socket, not from sshd_config. Changing the port there can lock the host out
-# unless the socket is regenerated, so the change is refused unless the operator opts in.
-- name: Refuse a non-22 SSH port on Ubuntu noble unless explicitly allowed
-  ansible.builtin.assert:
-    that:
-      - (hardening_ssh_port | int) == 22 or ansible_facts['distribution_release'] != 'noble' or hardening_allow_nonstandard_ssh_port_on_noble | bool
-    fail_msg: >-
-      hardening_ssh_port ({{ hardening_ssh_port }}) on Ubuntu noble needs
-      hardening_allow_nonstandard_ssh_port_on_noble: true, because ssh.socket
-      controls the listening port there. Verify access from a second session first.
-
 # 00- so this drop-in is read before cloud-init (50-), Amazon Linux (50-redhat)
 # and any other vendor drop-in. sshd keeps the first value it reads for each keyword.
 - name: Deploy hardened sshd drop-in configuration

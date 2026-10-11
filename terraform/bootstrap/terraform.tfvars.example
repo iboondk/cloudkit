@@ -1,5 +1,5 @@
 # Copy to terraform.tfvars (git-ignored). Placeholders only; no credentials belong here.
 aws_region        = "us-east-1"
 github_owner      = "replace-me"
-github_repo       = "cloudkit"
+github_repo       = "p2-cloudkit"
 state_bucket_name = "replace-me-cloudkit-tfstate"

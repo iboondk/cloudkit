@@ -1,4 +1,7 @@
 ---
+- name: Run preflight checks before any change to the host
+  ansible.builtin.import_tasks: preflight.yml
+
 - name: Import base package tasks
   ansible.builtin.import_tasks: packages.yml
 

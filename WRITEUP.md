@@ -21,12 +21,12 @@ CloudFront is the public entry point. It serves `/static/*` from a private S3 bu
 
 On a local macOS machine (Python 3.10):
 
-- The Python `unittest` suite ran 119 tests, all passing (`docs/proof/unittest.txt`).
+- The Python `unittest` suite ran 123 tests, all passing (`docs/proof/unittest.txt`).
 - The teardown dry run executed nothing (`docs/proof/teardown-dry-run.txt`).
-- `scripts/validate.sh` printed SKIP for terraform, ansible, tflint and shellcheck, which are not installed. Those checks are unverified, so the Terraform modules have not been fmt-checked or validated yet.
+- `scripts/validate.sh` exited 0. It skipped terraform, tflint and shellcheck, which are not installed, and its Ansible syntax check passed. The Terraform modules have not been fmt-checked or validated here. The older capture in `docs/proof/unverified/` is not evidence.
 
 Not verified: `terraform fmt`, `validate` and `terraform test`, no plan or apply against AWS, no GitHub workflow run, no container build. No load test exists, so there is no performance claim. The cost table is an estimate from public list prices, not a measured bill.
 
 ## What I would do next
 
-First, run `terraform providers lock` for linux_amd64 and arm64 so CI can install the AWS provider on Linux. Second, build the Tenantly image to replace the placeholder nginx image. Third, add a custom domain and ACM certificate to encrypt CloudFront-to-ALB traffic. Fourth, decide on ElastiCache and a second availability zone from measured load. Fifth, add WAF rules to CloudFront.
+First, fix the known `terraform-offline` CI failure by running `terraform providers lock` for all four platforms. Second, build the Tenantly image to replace the placeholder nginx image. Third, add a custom domain and ACM certificate to encrypt CloudFront-to-ALB traffic. Fourth, decide on ElastiCache and a second availability zone from measured load. Fifth, add WAF rules to CloudFront.

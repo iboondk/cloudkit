@@ -58,7 +58,7 @@ This script records a short GIF or Loom video of the CloudKit repository. Target
    ```
 
 3. Wait for the summary line that begins with `Ran`. Hold it on screen for 3 seconds.
-4. Expected output on the last lines: `Ran 119 tests` and `OK` (the count on the local machine). If your count differs, record what you see and do not edit this script.
+4. Expected output on the last lines: `Ran 123 tests` and `OK` (the count on the local machine). If your count differs, record what you see and do not edit this script.
 
 ### Scene 4: Teardown dry run
 
@@ -79,7 +79,7 @@ This script records a short GIF or Loom video of the CloudKit repository. Target
    bash scripts/validate.sh
    ```
 
-2. When the `SKIP:` lines appear, say: "Terraform, Ansible and shellcheck are not installed on this machine, so their checks are skipped. A skip is not a pass."
+2. When the `SKIP:` lines appear, read the tool name from each line aloud and say: "Those tools are not installed on this machine, so their checks did not run. A skip is not a pass." Lines without `SKIP:` are checks that ran. Read their results from the screen, and do not assume a result you did not see.
 3. Hold on the `validate exit code` line for 3 seconds.
 4. If Terraform is installed on your machine, the Terraform lines run instead of skipping. Record what you see, and do not claim results you did not see.
 

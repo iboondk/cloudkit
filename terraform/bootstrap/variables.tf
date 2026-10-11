@@ -12,7 +12,7 @@ variable "github_owner" {
 variable "github_repo" {
   description = "GitHub repository name trusted by the OIDC roles."
   type        = string
-  default     = "cloudkit"
+  default     = "p2-cloudkit"
 }
 
 variable "state_bucket_name" {

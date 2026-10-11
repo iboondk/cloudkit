@@ -1,6 +1,6 @@
 # CloudKit monthly cost estimate
 
-**Read this first.** These are estimates derived from public AWS pricing pages; not a measured bill. Nothing here reflects real spend. Verify with the AWS Pricing Calculator and your own billing console before you rely on any number.
+**Read this first.** The table below is estimates derived from public AWS pricing pages; not a measured bill; verify with the AWS Pricing Calculator. Nothing here reflects real spend. Check your own billing console before you rely on any number.
 
 Basis: us-east-1, on-demand list prices, 730 hours per month, the dev stack in `terraform/envs/dev`, and low traffic. Prices change. The USD figures are rounded.
 
@@ -12,7 +12,7 @@ AWS free-tier terms changed for accounts created after 2025-07-15. Those account
 
 | Component | Assumption | Free tier (12-month new account) | Est. USD/month after free tier |
 |---|---|---|---|
-| Fargate | 0.25 vCPU and 0.5 GB, 1 task, 730 h (x86, Linux) | None | ~9.03 |
+| Fargate | 0.25 vCPU and 0.5 GB, 1 task, 730 h (x86, Linux; $0.04048/vCPU-h and $0.004445/GB-h) | None | ~9.01 |
 | ALB | 1 Application Load Balancer, 730 h, 1 LCU average | Possibly 750 h/mo ELB hours and 15 LCU in year 1. Verify in your account | ~22.27 |
 | Public IPv4 | 3 addresses (ALB 2 + task 1), 730 h each at $0.005/h | Limited EC2 allowance only. Verify whether it covers these addresses | ~10.95 |
 | RDS PostgreSQL | db.t4g.micro, single-AZ, 20 GB gp3 storage, 730 h | 750 h/mo and 20 GB of eligible micro instance use in year 1. Verify eligibility | ~13.98 (instance ~11.68 + storage ~2.30) |
@@ -23,7 +23,7 @@ AWS free-tier terms changed for accounts created after 2025-07-15. Those account
 | SNS email | 1 topic, a few alarm emails per month | Always-free: 1,000 email deliveries per month | ~0.00 |
 | NAT gateway | **NOT used.** Tasks use public IPs and the internet gateway instead | Not applicable | $0. Avoided cost of about $33/month for one NAT gateway (0.045/h x 730), plus $0.045/GB processed |
 | ElastiCache | **NOT used.** Redis runs as a sidecar in the task | Not applicable | $0. Scale-up path would add a cache node, for example cache.t4g.micro at about $0.016/h |
-| **Total** | Sum of the rows above, dev stack | Year-1 free tier covers RDS, S3, CloudFront, CloudWatch and SNS. Fargate, public IPv4 and Secrets Manager stay billed. The ALB depends on your plan | **About $57 to $59 per month** (the rows above sum to $56.7 to $58.3, using the low and high end of the CloudFront and CloudWatch ranges) |
+| **Total** | Sum of the rows above, dev stack | Year-1 free tier covers RDS, S3, CloudFront, CloudWatch and SNS. Fargate, public IPv4 and Secrets Manager stay billed. The ALB depends on your plan | **About $57 to $58 per month** (the rows above sum to $56.7 to $58.3, using the low and high end of the CloudFront and CloudWatch ranges) |
 
 ## Notes
 
