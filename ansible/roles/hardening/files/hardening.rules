@@ -1,0 +1,6 @@
+# Managed by the Ansible hardening role. Loaded with augenrules --load.
+# Watch identity and SSH configuration files for writes and attribute changes.
+-w /etc/passwd -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/sudoers -p wa -k identity
+-w /etc/ssh/sshd_config -p wa -k sshd

@@ -1,0 +1,53 @@
+---
+- name: Refuse to run if the SSH port would be blocked by the firewall
+  ansible.builtin.assert:
+    that:
+      - (hardening_ssh_port | int) in (hardening_allow_tcp_ports | map('int') | list)
+    fail_msg: "hardening_ssh_port ({{ hardening_ssh_port }}) must be listed in hardening_allow_tcp_ports or the host will be locked out."
+
+- name: Install ufw (Debian family)
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Set ufw default policy to deny incoming (Debian family)
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Allow configured TCP ports in ufw (Debian family)
+  community.general.ufw:
+    rule: allow
+    port: "{{ item | string }}"
+    proto: tcp
+  loop: "{{ hardening_allow_tcp_ports }}"
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Enable ufw (Debian family)
+  community.general.ufw:
+    state: enabled
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install firewalld (RedHat family)
+  ansible.builtin.dnf:
+    name: firewalld
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Start and enable firewalld (RedHat family)
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Allow configured TCP ports in firewalld (RedHat family)
+  ansible.posix.firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ hardening_allow_tcp_ports }}"
+  when: ansible_facts['os_family'] == 'RedHat'

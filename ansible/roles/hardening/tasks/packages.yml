@@ -1,0 +1,36 @@
+---
+- name: Refresh apt package cache (Debian family)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Refresh dnf metadata cache (RedHat family)
+  ansible.builtin.dnf:
+    update_cache: true
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Remove legacy insecure clients (Debian family)
+  ansible.builtin.apt:
+    name: [telnet, rsh-client, talk]
+    state: absent
+    purge: true
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Remove legacy insecure clients (RedHat family)
+  ansible.builtin.dnf:
+    name: [telnet, rsh, talk]
+    state: absent
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Install auditd (Debian family)
+  ansible.builtin.apt:
+    name: auditd
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install audit (RedHat family)
+  ansible.builtin.dnf:
+    name: audit
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat'

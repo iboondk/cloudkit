@@ -1,0 +1,15 @@
+---
+- name: Deploy hardening audit rules
+  ansible.builtin.copy:
+    src: hardening.rules
+    dest: /etc/audit/rules.d/hardening.rules
+    owner: root
+    group: root
+    mode: "0600"
+  notify: reload auditd
+
+- name: Enable and start auditd
+  ansible.builtin.service:
+    name: auditd
+    state: started
+    enabled: true

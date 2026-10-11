@@ -1,0 +1,38 @@
+---
+# SSH
+# The hardening drop-in is /etc/ssh/sshd_config.d/00-hardening.conf. The 00- prefix makes it
+# the first file sshd reads, so its values are not overridden by vendor drop-ins such as
+# 50-cloud-init.conf (Ubuntu) or 50-redhat.conf (Amazon Linux 2023).
+hardening_ssh_port: 22
+# Ubuntu 24.04 (noble) uses socket activation: ssh.socket controls the listening port, not
+# sshd_config Port. The role restarts ssh.socket with daemon-reload after a port change, but a
+# non-22 port can still lock you out if the new port is not reachable. Keep this false unless
+# you have checked access on a second session. Without it, the role refuses a non-22 port on noble.
+hardening_allow_nonstandard_ssh_port_on_noble: false
+# Empty means no AllowUsers line is written. Set this to your admin user(s) before running in production.
+hardening_admin_users: []
+hardening_disable_root_login: true
+hardening_password_auth: false
+
+# Firewall: TCP ports opened in addition to the default-deny policy.
+# Must include hardening_ssh_port, or the role refuses to run (lockout guard in firewall.yml).
+hardening_allow_tcp_ports:
+  - 22
+
+# Automatic security updates (unattended-upgrades or dnf-automatic).
+hardening_auto_updates: true
+
+# fail2ban is installed on Ubuntu only. It is not in the Amazon Linux 2023 base repositories.
+hardening_fail2ban: true
+
+# Kernel and network sysctl values written to /etc/sysctl.d/99-hardening.conf.
+hardening_sysctl:
+  net.ipv4.conf.all.accept_redirects: 0
+  net.ipv4.conf.all.send_redirects: 0
+  net.ipv4.conf.all.rp_filter: 1
+  net.ipv4.tcp_syncookies: 1
+  net.ipv4.icmp_echo_ignore_broadcasts: 1
+  kernel.kptr_restrict: 2
+  kernel.dmesg_restrict: 1
+  fs.suid_dumpable: 0
+  net.ipv6.conf.all.accept_redirects: 0

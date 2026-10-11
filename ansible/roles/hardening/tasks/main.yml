@@ -1,0 +1,23 @@
+---
+- name: Import base package tasks
+  ansible.builtin.import_tasks: packages.yml
+
+- name: Import SSH hardening tasks
+  ansible.builtin.import_tasks: ssh.yml
+
+- name: Import sysctl hardening tasks
+  ansible.builtin.import_tasks: sysctl.yml
+
+- name: Import firewall tasks
+  ansible.builtin.import_tasks: firewall.yml
+
+- name: Import automatic update tasks
+  ansible.builtin.import_tasks: updates.yml
+  when: hardening_auto_updates
+
+- name: Import fail2ban tasks
+  ansible.builtin.import_tasks: fail2ban.yml
+  when: hardening_fail2ban
+
+- name: Import auditd tasks
+  ansible.builtin.import_tasks: auditd.yml

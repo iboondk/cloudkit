@@ -1,0 +1,13 @@
+DRY-RUN: CloudKit teardown: environment=dev mode=dry-run
+DRY-RUN: Step 1 of 3: empty the static assets bucket
+DRY-RUN: aws s3 rm s3://<assets-bucket> --recursive
+DRY-RUN: Step 2 of 3: destroy the dev stack (network, db, compute, edge, observability)
+DRY-RUN: terraform -chdir=terraform/envs/dev destroy -input=false
+DRY-RUN: Step 3 of 3: terraform/bootstrap is intentionally NOT destroyed
+DRY-RUN:   It holds the Terraform state bucket (prevent_destroy = true), the GitHub OIDC
+DRY-RUN:   provider and the plan/apply IAM roles. Removing it is a manual, deliberate task:
+DRY-RUN:   1. Review terraform/bootstrap and remove the state bucket's prevent_destroy in a reviewed change.
+DRY-RUN:   2. Empty the state bucket, including noncurrent object versions (it is versioned).
+DRY-RUN:   3. Run terraform -chdir=terraform/bootstrap destroy locally with your own credentials.
+DRY-RUN:   4. Delete the GitHub 'production' environment and any repository secrets you no longer need.
+DRY-RUN: Dry-run complete. Nothing was run. Use --execute with CLOUDKIT_CONFIRM_TEARDOWN=dev to run.

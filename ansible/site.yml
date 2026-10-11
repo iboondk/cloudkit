@@ -1,0 +1,7 @@
+---
+- name: Harden Linux hosts (Ubuntu 22.04/24.04 and Amazon Linux 2023)
+  hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - hardening

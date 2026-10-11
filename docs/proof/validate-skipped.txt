@@ -1,0 +1,5 @@
+SKIP: terraform not installed (terraform checks not run)
+SKIP: ansible not installed
+SKIP: tflint not installed
+SKIP: shellcheck not installed
+validate exit code: 0

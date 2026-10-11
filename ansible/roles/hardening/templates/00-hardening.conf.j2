@@ -1,0 +1,23 @@
+# Managed by the Ansible hardening role. Do not edit by hand.
+Port {{ hardening_ssh_port }}
+{% if hardening_disable_root_login %}
+PermitRootLogin no
+{% else %}
+PermitRootLogin prohibit-password
+{% endif %}
+{% if hardening_password_auth %}
+PasswordAuthentication yes
+{% else %}
+PasswordAuthentication no
+{% endif %}
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+X11Forwarding no
+MaxAuthTries 3
+LoginGraceTime 30
+ClientAliveInterval 300
+ClientAliveCountMax 2
+AllowTcpForwarding no
+{% if hardening_admin_users | length > 0 %}
+AllowUsers {{ hardening_admin_users | join(' ') }}
+{% endif %}

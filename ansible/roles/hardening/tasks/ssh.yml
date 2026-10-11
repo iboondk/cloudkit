@@ -1,0 +1,62 @@
+---
+# Ubuntu 24.04 (noble) uses socket activation: the listening port comes from
+# ssh.socket, not from sshd_config. Changing the port there can lock the host out
+# unless the socket is regenerated, so the change is refused unless the operator opts in.
+- name: Refuse a non-22 SSH port on Ubuntu noble unless explicitly allowed
+  ansible.builtin.assert:
+    that:
+      - (hardening_ssh_port | int) == 22 or ansible_facts['distribution_release'] != 'noble' or hardening_allow_nonstandard_ssh_port_on_noble | bool
+    fail_msg: >-
+      hardening_ssh_port ({{ hardening_ssh_port }}) on Ubuntu noble needs
+      hardening_allow_nonstandard_ssh_port_on_noble: true, because ssh.socket
+      controls the listening port there. Verify access from a second session first.
+
+# 00- so this drop-in is read before cloud-init (50-), Amazon Linux (50-redhat)
+# and any other vendor drop-in. sshd keeps the first value it reads for each keyword.
+- name: Deploy hardened sshd drop-in configuration
+  ansible.builtin.template:
+    src: 00-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/00-hardening.conf
+    owner: root
+    group: root
+    mode: "0600"
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify:
+    - restart ssh socket
+    - restart sshd
+
+- name: Check whether ssh.socket is active (Debian family)
+  ansible.builtin.command: systemctl is-active --quiet ssh.socket
+  register: hardening_ssh_socket_check
+  changed_when: false
+  failed_when: false
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Record whether sshd is socket-activated
+  ansible.builtin.set_fact:
+    hardening_ssh_socket_active: "{{ hardening_ssh_socket_check.rc | default(1) == 0 }}"
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Apply pending sshd handlers before verifying the effective configuration
+  ansible.builtin.meta: flush_handlers
+
+- name: Read effective sshd configuration
+  ansible.builtin.command: /usr/sbin/sshd -T
+  register: hardening_sshd_effective
+  changed_when: false
+
+# sshd -T prints the values sshd actually uses after every drop-in is merged.
+# A value a vendor drop-in wins with would show here even when the file on disk looks right.
+- name: Assert effective sshd values match the hardening settings
+  ansible.builtin.assert:
+    that:
+      # sshd -T prints 'without-password' for PermitRootLogin prohibit-password (OpenSSH's
+      # multistate table lists without-password first), so both spellings are accepted.
+      - "(hardening_disable_root_login | bool | ternary(['permitrootlogin no'], ['permitrootlogin prohibit-password', 'permitrootlogin without-password']) | intersect(hardening_sshd_effective.stdout_lines) | length) > 0"
+      - "('passwordauthentication ' ~ ('yes' if hardening_password_auth | bool else 'no')) in hardening_sshd_effective.stdout_lines"
+      - "'x11forwarding no' in hardening_sshd_effective.stdout_lines"
+    fail_msg: >-
+      sshd -T does not show the hardening values. Another drop-in in
+      /etc/ssh/sshd_config.d/ overrides them. Check the files that sort before 00-hardening.conf.
+      Accepted root-login values: 'permitrootlogin no' when hardening_disable_root_login is true,
+      otherwise 'permitrootlogin prohibit-password' or 'permitrootlogin without-password'.

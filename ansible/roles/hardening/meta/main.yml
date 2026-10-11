@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: iboondk
+  description: Host hardening for Ubuntu 22.04/24.04 and Amazon Linux 2023 (SSH, sysctl, firewall, updates, fail2ban, auditd).
+  license: MIT
+  min_ansible_version: '2.15'
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+    - name: Amazon
+      versions:
+        - '2023'
+  galaxy_tags:
+    - security
+    - hardening
+    - ssh
+dependencies: []

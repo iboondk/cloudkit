@@ -1,0 +1,21 @@
+---
+- name: Install fail2ban (Debian family)
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Configure fail2ban sshd jail (Debian family)
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart fail2ban
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Skip fail2ban on Amazon Linux 2023
+  ansible.builtin.debug:
+    msg: "fail2ban is not in the Amazon Linux 2023 base repositories. Skipping it on this host."
+  when: ansible_facts['os_family'] == 'RedHat'

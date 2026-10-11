@@ -1,0 +1,25 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+# .terraform.lock.hcl is intentionally NOT ignored for root configs (provider lock file is committed).
+# Reusable modules do not hold provider locks; validate.sh creates these when it inits them.
+terraform/modules/*/.terraform.lock.hcl
+
+# Local secrets and environment
+.env
+backend.hcl
+terraform.tfvars
+
+# Python
+__pycache__/
+
+# Ansible retry files
+*.retry
+
+# Ad-hoc validate.sh runs (timestamped). Named proof files are committed.
+docs/proof/validate-2*.txt
+
+# Local working notes (not part of the published repository)
+PLAN.md

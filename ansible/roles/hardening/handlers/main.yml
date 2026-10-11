@@ -1,0 +1,23 @@
+---
+# Socket-activated sshd (Ubuntu noble): regenerate the socket unit from sshd_config,
+# then restart it. Runs only when hardening_ssh_socket_active was recorded as true.
+- name: restart ssh socket
+  ansible.builtin.systemd_service:
+    name: ssh.socket
+    state: restarted
+    daemon_reload: true
+  when: hardening_ssh_socket_active | default(false) | bool
+
+- name: restart sshd
+  ansible.builtin.service:
+    name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
+    state: restarted
+
+- name: restart fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: restarted
+
+- name: reload auditd
+  ansible.builtin.command: augenrules --load
+  changed_when: true

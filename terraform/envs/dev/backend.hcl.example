@@ -1,0 +1,6 @@
+# Copy to backend.hcl (git-ignored) and replace the placeholder bucket name.
+bucket       = "replace-me-cloudkit-tfstate"
+key          = "envs/dev/terraform.tfstate"
+region       = "us-east-1"
+encrypt      = true
+use_lockfile = true

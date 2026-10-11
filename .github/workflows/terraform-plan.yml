@@ -1,0 +1,100 @@
+name: terraform-plan
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: tf-dev
+  cancel-in-progress: false
+
+env:
+  TF_VERSION: "1.10.5"
+  AWS_REGION: us-east-1
+  WORKDIR: terraform/envs/dev
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      # Offline checks. These run before any credentials are configured.
+      - name: Format check
+        run: terraform fmt -check -recursive terraform
+
+      - name: Init without backend, validate, offline tests
+        run: |
+          terraform -chdir=$WORKDIR init -backend=false -input=false
+          terraform -chdir=$WORKDIR validate
+          terraform -chdir=$WORKDIR test
+
+      # Skipped when the repository variable is unset (forks, unconfigured repos).
+      - name: Configure AWS credentials (OIDC)
+        if: vars.AWS_PLAN_ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Init with remote state
+        if: vars.AWS_PLAN_ROLE_ARN != ''
+        run: |
+          terraform -chdir=$WORKDIR init -input=false \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="key=envs/dev/terraform.tfstate" \
+            -backend-config="region=$AWS_REGION" \
+            -backend-config="use_lockfile=true"
+
+      - name: Plan
+        if: vars.AWS_PLAN_ROLE_ARN != ''
+        run: |
+          terraform -chdir=$WORKDIR plan -no-color -input=false -lock-timeout=5m -out=tfplan
+          terraform -chdir=$WORKDIR show -no-color tfplan > plan.txt
+
+      - name: Post or update plan comment
+        if: vars.AWS_PLAN_ROLE_ARN != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const marker = '<!-- cloudkit-terraform-plan -->';
+            const maxChars = 60000;
+            let plan = fs.readFileSync(path.join(process.env.GITHUB_WORKSPACE, 'plan.txt'), 'utf8');
+            if (plan.length > maxChars) {
+              plan = plan.slice(0, maxChars) + '\n... (truncated at ' + maxChars + ' characters)';
+            }
+            const body = [
+              marker,
+              '### Terraform plan for `' + process.env.WORKDIR + '`',
+              '',
+              '<details><summary>Show plan</summary>',
+              '',
+              '```terraform',
+              plan,
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
