@@ -2,7 +2,7 @@
 
 ## Problem
 
-Tenantly is a Go API backed by PostgreSQL 16 with row-level security, plus Redis for rate limiting and caching. It has no deployment target yet. CloudKit is the reference design for running it on AWS: infrastructure as code, CI/CD without long-lived keys, host hardening and monitoring. All checks run offline without AWS credentials.
+[Tenantly](https://github.com/iboondk/tenantly) is a Go API backed by PostgreSQL 16 with row-level security, plus Redis for rate limiting and caching. It has no deployment target yet. CloudKit is the reference design for running it on AWS: infrastructure as code, CI/CD without long-lived keys, host hardening and monitoring. All checks run offline without AWS credentials.
 
 ## Architecture
 

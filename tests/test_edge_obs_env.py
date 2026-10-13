@@ -54,7 +54,7 @@ class EdgeModuleTest(unittest.TestCase):
             self.assertRegex(block.group(1), rf"{flag}\s*=\s*true")
 
     def test_no_data_source_policy_document(self):
-        # PLAN.md rule: jsonencode() for policies, not aws_iam_policy_document.
+        # Convention (docs/architecture.md): jsonencode() for policies, not aws_iam_policy_document.
         self.assertNotIn('data "aws_iam_policy_document"', tf_text(EDGE_REL))
 
     def test_braces_balanced(self):
@@ -122,7 +122,7 @@ class DevEnvTest(unittest.TestCase):
         self.assertEqual(names, self.ROOT_OUTPUTS)
 
     def test_provider_default_tags(self):
-        # The spec puts the provider block in versions.tf beside the terraform block.
+        # Convention: the provider block goes in versions.tf beside the terraform block.
         text = read(f"{DEV_REL}/versions.tf")
         self.assertIn('provider "aws"', text)
         self.assertIn("default_tags", text)

@@ -5,7 +5,7 @@
 > **Placeholders:** the badge above and the clone URL in the Quick start are placeholders. This local repository has no git remote, and the URL has not been verified to exist. They become real once the repository is pushed.
 >
 
-CloudKit is a reference deployment of the Tenantly API on AWS. It contains Terraform modules, GitHub Actions workflows that authenticate with OIDC, an Ansible hardening role, and CloudWatch monitoring.
+CloudKit is a reference deployment of the [Tenantly](https://github.com/iboondk/tenantly) API on AWS. It contains Terraform modules, GitHub Actions workflows that authenticate with OIDC, an Ansible hardening role, and CloudWatch monitoring.
 
 **Status: nothing here has been deployed.** The repository has been checked only with the offline tools listed under [Verification](#verification). It has never been applied to a real AWS account.
 

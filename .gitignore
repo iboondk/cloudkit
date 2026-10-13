@@ -21,5 +21,9 @@ __pycache__/
 # Ad-hoc validate.sh runs (timestamped). Named proof files are committed.
 docs/proof/validate-2*.txt
 
-# Local working notes (not part of the published repository)
-PLAN.md
+
+# Dependencies, build output and scratch
+node_modules/
+vendor/
+target/
+.tmp/
