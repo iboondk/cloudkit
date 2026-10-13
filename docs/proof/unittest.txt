@@ -1,4 +1,6 @@
 test_handler_names_cover_every_notify (test_ansible.HandlersTest) ... ok
+test_socket_handler_only_runs_for_non_default_port (test_ansible.HandlersTest) ... ok
+test_ssh_service_stopped_before_socket_restart (test_ansible.HandlersTest) ... ok
 test_inventory_has_bastion_group (test_ansible.InventoryTest) ... ok
 test_inventory_has_only_documentation_ips (test_ansible.InventoryTest) ... ok
 test_ansible_cfg_settings (test_ansible.PlaybookTest) ... ok
@@ -13,6 +15,7 @@ test_sysctl_keys_and_values (test_ansible.RoleDefaultsTest) ... ok
 test_galaxy_info (test_ansible.RoleMetaTest) ... ok
 test_auditd_rules_watch_expected_files (test_ansible.RoleTasksStructureTest) ... ok
 test_each_imported_task_file_exists (test_ansible.RoleTasksStructureTest) ... ok
+test_effective_sshd_assert_is_skipped_in_check_mode (test_ansible.RoleTasksStructureTest) ... ok
 test_every_task_has_name (test_ansible.RoleTasksStructureTest) ... ok
 test_fail2ban_skips_redhat (test_ansible.RoleTasksStructureTest) ... ok
 test_first_executed_task_is_the_ssh_port_assert (test_ansible.RoleTasksStructureTest) ... ok
@@ -21,6 +24,7 @@ test_main_imports_all_task_files (test_ansible.RoleTasksStructureTest) ... ok
 test_module_keys_are_fully_qualified (test_ansible.RoleTasksStructureTest) ... ok
 test_os_branching_present (test_ansible.RoleTasksStructureTest) ... ok
 test_preflight_is_first_import_and_runs_before_any_change (test_ansible.RoleTasksStructureTest) ... ok
+test_read_only_ssh_commands_run_in_check_mode (test_ansible.RoleTasksStructureTest) ... ok
 test_root_login_assert_accepts_both_prohibit_password_spellings (test_ansible.RoleTasksStructureTest) ... ok
 test_ssh_drop_in_sorts_before_vendor_drop_ins (test_ansible.RoleTasksStructureTest) ... ok
 test_ssh_refuses_nonstandard_port_on_noble_by_default (test_ansible.RoleTasksStructureTest) ... ok
@@ -96,11 +100,13 @@ test_ci_runs_unit_tests_and_teardown_dry_run (test_packaging.PackagingTest) ... 
 test_ci_workflow_is_credential_free (test_packaging.PackagingTest) ... ok
 test_deliverables_exist (test_packaging.PackagingTest) ... ok
 test_demo_has_numbered_steps (test_packaging.PackagingTest) ... ok
+test_known_ci_failure_note_removed (test_packaging.PackagingTest) ... ok
 test_no_compose_file_added (test_packaging.PackagingTest) ... ok
 test_readme_has_badge_placeholder_for_ci (test_packaging.PackagingTest) ... ok
 test_readme_has_mermaid_diagram (test_packaging.PackagingTest) ... ok
 test_readme_links_resolve (test_packaging.PackagingTest) ... ok
 test_readme_quick_start_is_credential_free (test_packaging.PackagingTest) ... ok
+test_root_lock_files_hold_registry_zh_hashes (test_packaging.PackagingTest) ... ok
 test_test_count_matches_captured_run_in_docs (test_packaging.PackagingTest) ... ok
 test_writeup_has_required_sections (test_packaging.PackagingTest) ... ok
 test_writeup_word_count_is_about_400 (test_packaging.PackagingTest) ... ok
@@ -123,6 +129,6 @@ test_no_secret_assignments (test_repo_hygiene.RepoHygieneTest) ... ok
 test_terraform_apply_only_in_apply_workflow (test_repo_hygiene.RepoHygieneTest) ... ok
 
 ----------------------------------------------------------------------
-Ran 123 tests in 1.000s
+Ran 129 tests in 78.084s
 
 OK

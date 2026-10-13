@@ -12,6 +12,7 @@ MODULE_KEY_RE = re.compile(r"^(ansible\.builtin|ansible\.posix|community\.genera
 TASK_KEYWORDS = {
     "name", "when", "loop", "notify", "become", "register", "tags", "vars", "import_tasks",
     "include_tasks", "block", "changed_when", "failed_when", "loop_control", "with_items", "listen",
+    "check_mode",
 }
 IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 DOC_NET = ipaddress.ip_network("203.0.113.0/24")
@@ -231,6 +232,29 @@ class RoleTasksStructureTest(unittest.TestCase):
             with self.subTest(needle=needle):
                 self.assertIn(needle, text)
 
+    def test_read_only_ssh_commands_run_in_check_mode(self):
+        # ansible.builtin.command is skipped under --check unless check_mode is false.
+        # Without it the sshd -T result is missing and the assert below fails on undefined stdout_lines.
+        tasks = task_list("ssh.yml")
+        read_only = [
+            t for t in tasks
+            if "ansible.builtin.command" in t
+            and ("sshd -T" in str(t["ansible.builtin.command"]) or "ssh.socket" in str(t["ansible.builtin.command"]))
+        ]
+        self.assertEqual(len(read_only), 2)
+        for task in read_only:
+            with self.subTest(task=task.get("name")):
+                self.assertIs(task.get("check_mode"), False)
+
+    def test_effective_sshd_assert_is_skipped_in_check_mode(self):
+        # The drop-in is not written under --check, so sshd -T would still show the old config.
+        assert_tasks = [
+            t for t in task_list("ssh.yml")
+            if "ansible.builtin.assert" in t and str(t.get("name", "")).startswith("Assert effective sshd")
+        ]
+        self.assertEqual(len(assert_tasks), 1)
+        self.assertEqual(assert_tasks[0].get("when"), "not ansible_check_mode")
+
     def test_root_login_assert_accepts_both_prohibit_password_spellings(self):
         # Evaluates the real assert expression with jinja2 and Ansible-equivalent shims for
         # bool, ternary and intersect. This checks the logic, not Ansible's templating engine:
@@ -340,6 +364,26 @@ class HandlersTest(unittest.TestCase):
         self.assertIn("restart ssh socket", handler_names)
         self.assertIn("restart fail2ban", handler_names)
         self.assertIn("reload auditd", handler_names)
+
+    def test_socket_handler_only_runs_for_non_default_port(self):
+        # Restarting ssh.socket while ssh.service is active fails on noble ("refusing"),
+        # so the socket handler must be gated on the port leaving 22.
+        handlers = load_yaml(f"{ROLE_REL}/handlers/main.yml")
+        socket_handlers = [h for h in handlers if h.get("name") == "restart ssh socket"]
+        self.assertEqual(len(socket_handlers), 1)
+        when = str(socket_handlers[0].get("when", ""))
+        self.assertIn("hardening_ssh_port", when)
+        self.assertIn("!= 22", when)
+        self.assertIn("hardening_ssh_socket_active", when)
+
+    def test_ssh_service_stopped_before_socket_restart(self):
+        handlers = load_yaml(f"{ROLE_REL}/handlers/main.yml")
+        stop = [h for h in handlers if "restart ssh socket" in (h.get("listen") or [])
+                or h.get("listen") == "restart ssh socket"]
+        self.assertEqual(len(stop), 1)
+        self.assertEqual(stop[0]["ansible.builtin.systemd_service"]["name"], "ssh.service")
+        self.assertEqual(stop[0]["ansible.builtin.systemd_service"]["state"], "stopped")
+        self.assertIn("hardening_ssh_port", str(stop[0].get("when", "")))
 
 
 class InventoryTest(unittest.TestCase):

@@ -23,7 +23,8 @@ def iter_repo_files():
             capture_output=True,
             check=True,
         ).stdout
-        names = [n for n in out.decode("utf-8").split("\0") if n]
+        # A tracked file deleted from the working tree is still listed by ls-files; skip it.
+        names = [n for n in out.decode("utf-8").split("\0") if n and os.path.isfile(os.path.join(ROOT, n))]
         if names:
             return names
     except (OSError, subprocess.CalledProcessError):

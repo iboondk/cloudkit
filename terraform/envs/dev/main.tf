@@ -1,15 +1,3 @@
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = {
-      Project   = "cloudkit"
-      Env       = "dev"
-      ManagedBy = "terraform"
-    }
-  }
-}
-
 module "network" {
   source = "../../modules/network"
 

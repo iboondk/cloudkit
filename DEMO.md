@@ -58,7 +58,7 @@ This script records a short GIF or Loom video of the CloudKit repository. Target
    ```
 
 3. Wait for the summary line that begins with `Ran`. Hold it on screen for 3 seconds.
-4. Expected output on the last lines: `Ran 123 tests` and `OK` (the count on the local machine). If your count differs, record what you see and do not edit this script.
+4. Expected output on the last lines: `Ran 129 tests` and `OK` (the count on the local machine). If your count differs, record what you see and do not edit this script.
 
 ### Scene 4: Teardown dry run
 

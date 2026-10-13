@@ -81,6 +81,22 @@ class PackagingTest(unittest.TestCase):
             for count in counts:
                 self.assertEqual(count, expected, f"{rel} says {count} tests, run says {expected}")
 
+    def test_root_lock_files_hold_registry_zh_hashes(self):
+        # A lock file with only h1 hashes (one local-mirror checksum) fails `terraform init`
+        # on other platforms. A zh: entry is the registry's per-zip hash, so require one.
+        roots = sorted((ROOT / "terraform").glob("**/.terraform.lock.hcl"))
+        roots = [p for p in roots if "modules" not in p.parts]
+        self.assertTrue(roots, "no root lock files found under terraform/")
+        for path in roots:
+            text = path.read_text(encoding="utf-8")
+            rel = path.relative_to(ROOT)
+            self.assertIn('provider "registry.terraform.io/', text, f"{rel} lists no provider")
+            self.assertRegex(text, r'"zh:[0-9a-f]{64}"', f"{rel} has no zh: hash for linux_amd64")
+
+    def test_known_ci_failure_note_removed(self):
+        self.assertNotIn("Known CI failure", read(README))
+        self.assertNotIn("First, fix the known", read(WRITEUP))
+
     def test_no_compose_file_added(self):
         # CloudKit is infrastructure code, not a locally runnable service.
         self.assertFalse((ROOT / "docker-compose.yml").exists())

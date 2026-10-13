@@ -122,7 +122,9 @@ class DevEnvTest(unittest.TestCase):
         self.assertEqual(names, self.ROOT_OUTPUTS)
 
     def test_provider_default_tags(self):
-        text = read(f"{DEV_REL}/main.tf")
+        # The spec puts the provider block in versions.tf beside the terraform block.
+        text = read(f"{DEV_REL}/versions.tf")
+        self.assertIn('provider "aws"', text)
         self.assertIn("default_tags", text)
         self.assertIn('Project   = "cloudkit"', text)
 

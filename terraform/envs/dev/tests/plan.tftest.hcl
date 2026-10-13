@@ -74,11 +74,18 @@ run "alarm_email_subscribes" {
     alarm_email = "ops@example.com"
   }
 
-  # The topic ARN is only known after apply, so the plan-time assertion checks the
-  # inputs and the plan-known outputs instead. The count = 1 subscription path
-  # still has to plan cleanly for this run to pass.
+  # With an alarm email set, the count = 1 email subscription must plan cleanly.
+  # This run proves that the plan succeeds with the subscription present. Under
+  # command = plan the mock provider leaves computed attributes such as the topic
+  # ARN unknown, so the assertions use only values known at plan time (configured
+  # names and counts).
   assert {
-    condition     = var.alarm_email == "ops@example.com" && length(module.observability.alarm_names) == 7 && module.observability.dashboard_name == "cloudkit-dev"
-    error_message = "Expected the alarm email to be set, seven alarms, and the cloudkit-dev dashboard when an alarm email is set."
+    condition     = module.observability.dashboard_name == "cloudkit-dev"
+    error_message = "Expected the dashboard name to be cloudkit-dev when an alarm email is set."
+  }
+
+  assert {
+    condition     = length(module.observability.alarm_names) == 7
+    error_message = "Expected exactly seven CloudWatch alarms when an alarm email is set."
   }
 }

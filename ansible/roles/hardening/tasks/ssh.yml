@@ -15,6 +15,7 @@
 
 - name: Check whether ssh.socket is active (Debian family)
   ansible.builtin.command: systemctl is-active --quiet ssh.socket
+  check_mode: false
   register: hardening_ssh_socket_check
   changed_when: false
   failed_when: false
@@ -30,12 +31,16 @@
 
 - name: Read effective sshd configuration
   ansible.builtin.command: /usr/sbin/sshd -T
+  check_mode: false
   register: hardening_sshd_effective
   changed_when: false
 
 # sshd -T prints the values sshd actually uses after every drop-in is merged.
 # A value a vendor drop-in wins with would show here even when the file on disk looks right.
+# Skipped in check mode: the drop-in above is not written there, so sshd -T still shows the old
+# config and the assert would fail on a fresh host even though the real run would pass.
 - name: Assert effective sshd values match the hardening settings
+  when: not ansible_check_mode
   ansible.builtin.assert:
     that:
       # sshd -T prints 'without-password' for PermitRootLogin prohibit-password (OpenSSH's

@@ -1,12 +1,26 @@
 ---
-# Socket-activated sshd (Ubuntu noble): regenerate the socket unit from sshd_config,
-# then restart it. Runs only when hardening_ssh_socket_active was recorded as true.
+# Socket-activated sshd (Ubuntu noble). The socket only needs a restart when the port changes:
+# with port 22 the ListenStream already matches, and restarting ssh.socket while ssh.service
+# is active fails with "Socket service ssh.service already active, refusing." on every first run.
+# For a non-22 port, ssh.service is stopped first so the socket can start again. Established
+# sessions survive because the unit uses KillMode=process.
+- name: stop ssh service before socket port change
+  listen: restart ssh socket
+  ansible.builtin.systemd_service:
+    name: ssh.service
+    state: stopped
+  when: >-
+    (hardening_ssh_socket_active | default(false) | bool)
+    and (hardening_ssh_port | int) != 22
+
 - name: restart ssh socket
   ansible.builtin.systemd_service:
     name: ssh.socket
     state: restarted
     daemon_reload: true
-  when: hardening_ssh_socket_active | default(false) | bool
+  when: >-
+    (hardening_ssh_socket_active | default(false) | bool)
+    and (hardening_ssh_port | int) != 22
 
 - name: restart sshd
   ansible.builtin.service:
