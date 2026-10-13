@@ -88,7 +88,8 @@ Captured output lives in [docs/proof/](docs/proof/). Only output from real runs 
 
 ## CI and deployment
 
-- **`ci.yml`** runs on every push to main and every pull request. It runs the unit tests, the teardown dry run, shellcheck, the offline Terraform checks and the Ansible syntax check. It uses no AWS credentials.- **`terraform-plan.yml`** runs on pull requests that touch `terraform/`. It assumes a read-only role through OIDC and posts the plan as a pull request comment.
+- **`ci.yml`** runs on every push to main and every pull request. It runs the unit tests, the teardown dry run, shellcheck, the offline Terraform checks and the Ansible syntax check. It uses no AWS credentials.
+- **`terraform-plan.yml`** runs on pull requests that touch `terraform/`. It assumes a read-only role through OIDC and posts the plan as a pull request comment.
 - **`terraform-apply.yml`** runs after a merge to main. It uses the `production` environment and an OIDC role that trusts only `main`.
 
 No workflow in this repository has been executed on GitHub.
